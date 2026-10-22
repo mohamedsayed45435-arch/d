@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ببساطة معلم مساعد</title>
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: one centered column; setup card on top, one question at a time, results with review list. */
+:root{
+  --bg:#EEF2F4; --surface:#FFFFFF; --surface-2:#E4EBEE; --line:#CBD6DB;
+  --ink:#0F2229; --ink-2:#4A5F68;
+  --brand:#0A6B6B; --brand-ink:#FFFFFF; --brand-soft:#D7ECEA;
+  --gold:#C98A0B; --ok:#17794A; --ok-soft:#DDF2E6; --bad:#B3261E; --bad-soft:#FAE1DE;
+  --wa:#128C4A;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --f-verse:"Amiri","Traditional Arabic","Times New Roman",serif;
+}
+:root[data-theme="dark"]{
+  --bg:#0B1519; --surface:#12222A; --surface-2:#1A2E37; --line:#28414C;
+  --ink:#E8F1F3; --ink-2:#9FB5BD;
+  --brand:#4FC3BE; --brand-ink:#052626; --brand-soft:#16393B;
+  --gold:#F0B54A; --ok:#5FD39A; --ok-soft:#14352A; --bad:#FF8F86; --bad-soft:#3B1E1C;
+  --wa:#3DD07E; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-block:0 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:760px;margin-inline:auto}
+.num{font-variant-numeric:tabular-nums}
+
+/* header + logo */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;min-width:0}
+.mark{position:relative;flex:none;width:46px;height:46px;background:var(--brand);color:var(--brand-ink);
+  display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1;
+  clip-path:polygon(0 0,78% 0,100% 22%,100% 100%,0 100%)}
+.mark::after{content:"";position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.word{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.word b{font-family:var(--f-display);font-size:26px;font-weight:700;letter-spacing:.02em}
+.word span{font-size:12px;color:var(--ink-2);letter-spacing:.06em}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--line);background:var(--surface);
+  padding:10px 18px;border-radius:10px;font-weight:600;min-height:44px;text-decoration:none;color:var(--ink);transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+:root[data-theme="dark"] .btn.wa{color:#04210F}
+.theme{min-width:44px;padding:10px 12px}.theme svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.theme .sun{display:none}:root[data-theme="dark"] .theme .sun{display:block}:root[data-theme="dark"] .theme .moon{display:none}.tools{display:flex;gap:8px;align-items:center}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg{width:20px;height:20px;flex:none;fill:currentColor}
+
+/* hero */
+.hero{padding-block:22px 10px}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,6.4vw,46px);line-height:1.25;margin:0 0 12px;text-wrap:balance}
+.hero p{margin:0;color:var(--ink-2);max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:8px 22px;margin:20px 0 0;padding:0;list-style:none}
+.facts li{display:flex;align-items:baseline;gap:8px;font-size:14px;color:var(--ink-2)}
+.facts b{font-family:var(--f-display);font-size:26px;color:var(--brand);font-weight:700}
+
+/* setup */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+.setup{margin-top:22px;display:flex;flex-direction:column;gap:22px}
+.field h2{margin:0 0 10px;font-size:14px;font-weight:600;color:var(--ink-2);letter-spacing:.04em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 16px;min-height:42px;display:inline-flex;gap:8px;align-items:center;font-weight:500}
+.chip small{color:var(--ink-2);font-size:12px}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.chip[aria-pressed="true"] small{color:inherit;opacity:.85}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.mode{text-align:start;border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.mode b{font-weight:600}.mode span{font-size:13px;color:var(--ink-2)}
+.mode[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.start-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.start-row .btn.primary{padding-inline:30px;font-size:18px;min-height:52px}
+.note{font-size:13px;color:var(--ink-2);margin:0}
+
+/* quiz */
+.qhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 14px}
+.qhead .btn{min-height:38px;padding:6px 14px;font-size:14px}
+.count{font-weight:600}.count span{color:var(--ink-2);font-weight:400}
+.track{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--brand);width:0;transition:width .3s}
+.qcard{margin-top:16px;padding:24px 22px}
+.tag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--brand);background:var(--brand-soft);padding:2px 12px;border-radius:99px}
+.qtext{font-size:clamp(19px,3.8vw,23px);line-height:1.95;margin:14px 0 20px;font-weight:500;overflow-wrap:anywhere}
+.ayah,.vs{font-family:var(--f-verse);font-size:1.18em;font-weight:700;color:var(--brand);display:inline}
+.vs{color:var(--ink);padding-inline:2px;background:linear-gradient(transparent 62%,var(--brand-soft) 62%)}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:flex-start;text-align:start;width:100%;border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:12px 14px;min-height:56px;transition:border-color .15s,background .15s}
+.opt:hover:not([disabled]){border-color:var(--brand)}
+.opt .l{flex:none;width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-weight:600;font-size:15px;margin-top:1px}
+.opt .t{flex:1;min-width:0;overflow-wrap:anywhere;padding-top:1px}
+.opt.sel{border-color:var(--brand);background:var(--brand-soft)}
+.opt.sel .l{background:var(--brand);color:var(--brand-ink)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.ok .l{background:var(--ok);color:var(--surface)}
+.opt.no{border-color:var(--bad);background:var(--bad-soft)}
+.opt.no .l{background:var(--bad);color:var(--surface)}
+.opt[disabled]{cursor:default}
+.why{margin-top:16px;border-inline-start:4px solid var(--gold);background:var(--surface-2);padding:12px 16px;border-radius:8px}
+.why b{display:block;font-size:13px;color:var(--ink-2);letter-spacing:.05em}
+.qfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px}
+.hint{font-size:13px;color:var(--ink-2)}
+
+/* results */
+.score{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+.ring{position:relative;width:132px;height:132px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:11}
+.ring .bg{stroke:var(--surface-2)}.ring .fg{stroke:var(--brand);stroke-linecap:round;transition:stroke-dashoffset .8s}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-size:32px}
+.score h2{font-family:var(--f-display);margin:0 0 4px;font-size:26px}
+.score p{margin:0;color:var(--ink-2)}
+@media (max-width:440px){.score{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.cats{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.cat{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;font-size:15px}
+.cat .bar2{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.cat .bar2 i{display:block;height:100%;background:var(--brand)}
+.cat .bar2 i.low{background:var(--bad)}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.rev{margin-top:26px}
+.rev h3{font-family:var(--f-display);font-size:22px;margin:0 0 12px}
+.ri{border:1px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:10px}
+.ri summary{cursor:pointer;padding:12px 16px;list-style:none;display:flex;gap:10px;align-items:flex-start}
+.ri summary::-webkit-details-marker{display:none}
+.ri summary::before{content:"✕";flex:none;color:var(--bad);font-weight:700}
+.ri .b{padding:0 16px 14px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.ri .b .y{color:var(--ok);font-weight:600}.ri .b .n{color:var(--bad)}
+
+.trial{font-size:13px;font-weight:600;color:var(--ink-2);background:var(--surface-2);padding:6px 12px;border-radius:99px;white-space:nowrap}
+.lock{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;overflow:auto;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lockc{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;text-align:center;align-items:stretch}
+.lockc .mark{align-self:center;width:56px;height:56px;font-size:36px}
+.lockc h2{font-family:var(--f-display);font-size:26px;margin:0}
+.lockc p{margin:0;color:var(--ink-2)}
+.pw{font:inherit;font-size:22px;letter-spacing:.3em;text-align:center;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-height:52px;width:100%}
+.pw:focus{border-color:var(--brand)}
+.err{color:var(--bad);font-weight:600;min-height:1.7em}
+footer{margin-top:40px;padding-block:20px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.fab{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:calc(16px + env(safe-area-inset-left,0px));z-index:5;
+  box-shadow:0 6px 20px rgb(0 0 0 / .22);padding-inline:18px}
+@media (max-width:480px){#waTop span{display:none}#waTop{padding:10px 12px}.word b{font-size:22px}.word span{white-space:nowrap}.trial{font-size:12px;padding:5px 9px}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div id="app" dir="rtl" lang="ar">
+<header class="wrap bar">
+  <a class="logo" href="#" aria-label="ببساطة">
+    <span class="mark" aria-hidden="true">ب</span>
+    <span class="word"><b>ببساطة</b><span>مسابقة معلم مساعد</span></span>
+  </a>
+  <div class="tools"><span class="trial num" id="trial"></span><button class="btn theme" id="themeBtn" type="button" aria-label="تبديل الوضع الفاتح والليلي" title="الوضع الفاتح / الليلي"><svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+  <a class="btn wa" id="waTop" href="#" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.95L2 22l5.2-1.5A9.93 9.93 0 1 0 12.04 2Zm5.8 14.1c-.25.7-1.45 1.33-2 1.4-.52.07-1.17.1-1.9-.12a17 17 0 0 1-1.72-.64c-3.02-1.3-5-4.34-5.15-4.54-.15-.2-1.23-1.64-1.23-3.13s.78-2.22 1.06-2.52c.27-.3.6-.37.8-.37h.57c.18 0 .43-.07.67.52.25.6.85 2.08.93 2.23.07.15.12.32.02.52-.1.2-.15.32-.3.5l-.45.52c-.15.15-.3.32-.13.62.17.3.77 1.27 1.65 2.05 1.13 1 2.1 1.32 2.4 1.47.3.15.47.12.65-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.73.82 2.03.97.3.15.5.22.57.35.07.12.07.72-.18 1.42Z"/></svg>
+    <span>تواصل واتساب</span>
+  </a></div>
+</header>
+
+<main class="wrap">
+  <section id="home">
+    <div class="hero">
+      <h1>اختبر نفسك لمسابقة معلم مساعد</h1>
+      <p>أسئلة متوقعة في خمسة محاور: التربوي، المعلومات العامة، الحاسب الآلي، اللغة العربية، واللغة الإنجليزية. كل سؤال له أربعة بدائل وشرح مختصر.</p>
+      <ul class="facts">
+        <li><b class="num" id="fTotal">١٥٠</b> سؤال</li>
+        <li><b class="num" id="fCats">٥</b> محاور</li>
+        <li><b class="num">٤</b> بدائل لكل سؤال</li>
+      </ul>
+    </div>
+    <div class="card setup">
+      <div class="field"><h2>المحور</h2><div class="chips" id="catChips"></div></div>
+      <div class="field"><h2>عدد الأسئلة</h2><div class="chips" id="countChips"></div></div>
+      <div class="field"><h2>طريقة الحل</h2>
+        <div class="modes" id="modes">
+          <button class="mode" data-m="practice" aria-pressed="true"><b>تدريب</b><span>تظهر الإجابة والشرح بعد كل سؤال</span></button>
+          <button class="mode" data-m="exam" aria-pressed="false"><b>اختبار</b><span>تظهر النتيجة والمراجعة في النهاية</span></button>
+        </div>
+      </div>
+      <div class="start-row">
+        <button class="btn primary" id="startBtn">ابدأ الاختبار</button>
+        <p class="note">أسئلة متوقعة مبنية على ما تداوله المتسابقون، وليست امتحانًا رسميًا.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="qhead">
+      <div class="count num" id="qCount"></div>
+      <button class="btn" id="quitBtn">إنهاء</button>
+    </div>
+    <div class="track" role="progressbar" aria-label="التقدم"><i id="prog"></i></div>
+    <div class="card qcard">
+      <span class="tag" id="qTag"></span>
+      <div class="qtext" id="qText"></div>
+      <div class="opts" id="opts"></div>
+      <div class="why" id="why" hidden><b>الشرح</b><span id="whyT"></span></div>
+      <div class="qfoot">
+        <span class="hint" id="hint">اضغط على رقم الخيار أو اختره بالنقر</span>
+        <button class="btn primary" id="nextBtn" disabled>التالي</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" hidden>
+    <div class="card">
+      <div class="score">
+        <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="ringFg" cx="60" cy="60" r="52"/></svg><b class="num" id="pct"></b></div>
+        <div><h2 id="rTitle"></h2><p id="rSub" class="num"></p></div>
+      </div>
+      <div class="cats" id="cats"></div>
+      <div class="acts">
+        <button class="btn primary" id="againBtn">اختبار جديد</button>
+        <button class="btn" id="wrongBtn">أعد الأسئلة الخاطئة</button>
+        <a class="btn wa" id="shareBtn" href="#" target="_blank" rel="noopener">شارك نتيجتك</a>
+      </div>
+    </div>
+    <div class="rev" id="rev"></div>
+  </section>
+</main>
+
+<footer class="wrap">ببساطة، تدريب على أسئلة مسابقة معلم مساعد. الأسئلة للمراجعة والتدرّب.</footer>
+<a class="btn wa fab" id="waFab" href="#" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.95L2 22l5.2-1.5A9.93 9.93 0 1 0 12.04 2Zm5.8 14.1c-.25.7-1.45 1.33-2 1.4-.52.07-1.17.1-1.9-.12a17 17 0 0 1-1.72-.64c-3.02-1.3-5-4.34-5.15-4.54-.15-.2-1.23-1.64-1.23-3.13s.78-2.22 1.06-2.52c.27-.3.6-.37.8-.37h.57c.18 0 .43-.07.67.52.25.6.85 2.08.93 2.23.07.15.12.32.02.52-.1.2-.15.32-.3.5l-.45.52c-.15.15-.3.32-.13.62.17.3.77 1.27 1.65 2.05 1.13 1 2.1 1.32 2.4 1.47.3.15.47.12.65-.07.17-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.73.82 2.03.97.3.15.5.22.57.35.07.12.07.72-.18 1.42Z"/></svg>
+  <span>واتساب</span>
+</a>
+<div class="lock" id="lock" role="dialog" aria-modal="true" aria-labelledby="lockT" hidden>
+  <form class="card lockc" id="lockForm" autocomplete="off">
+    <span class="mark" aria-hidden="true">ب</span>
+    <h2 id="lockT">انتهت الفترة التجريبية</h2>
+    <p>أدخل كلمة السر للمتابعة، أو تواصل معنا على واتساب لتحصل عليها.</p>
+    <input class="pw" id="pw" type="password" inputmode="numeric" aria-label="كلمة السر" placeholder="••••">
+    <div class="err" id="pwErr" role="alert"></div>
+    <button class="btn primary" type="submit" id="pwBtn">فتح</button>
+    <a class="btn wa" id="waLock" href="#" target="_blank" rel="noopener">اطلب كلمة السر</a>
+  </form>
+</div>
+</div>
+
+<script>window.QS=window.QS||[];window.QS.push(
+["تربوي","صاحب نظرية النمو النفسي الاجتماعي ذات المراحل الثماني هو:","إريك إريكسون","جان بياجيه","ليف فيجوتسكي","لورانس كولبرج","ربط إريكسون كل مرحلة عمرية بأزمة نفسية اجتماعية، مثل الثقة مقابل عدم الثقة."],
+["تربوي","النظرية التي تؤكد دور التعلم القبلي (ما يعرفه المتعلم سابقًا) واستخدام المنظم المتقدم هي نظرية:","أوزوبل","سكنر","ثورندايك","بافلوف","التعلم ذو المعنى عند أوزوبل يربط المعلومة الجديدة بالبنية المعرفية السابقة."],
+["تربوي","يكتسب الطفل مفهوم بقاء الشيء رغم اختفائه عن مجال رؤيته في مرحلة:","الحس حركية","ما قبل العمليات","العمليات المحسوسة","العمليات الشكلية","يظهر هذا المفهوم تقريبًا في الشهر الثامن، ضمن المرحلة الحس حركية (من الميلاد حتى سنتين)."],
+["تربوي","مرحلة يستطيع فيها الطفل التصنيف وإدراك الاحتفاظ، لكن على الأشياء المحسوسة فقط:","العمليات المحسوسة","الحس حركية","ما قبل العمليات","العمليات الشكلية","تمتد تقريبًا من ٧ إلى ١١ سنة."],
+["تربوي","التفكير في الفرضيات المجردة والاحتمالات يرتبط بمرحلة:","العمليات الشكلية","العمليات المحسوسة","ما قبل العمليات","الحس حركية","هي المرحلة الأخيرة عند بياجيه، وتبدأ من نحو ١١ سنة."],
+["تربوي","ظهور اللعب الرمزي واستخدام الكلمات لتمثيل الأشياء يرتبط بمرحلة:","ما قبل العمليات","الحس حركية","العمليات المحسوسة","العمليات الشكلية","من سن ٢ إلى ٧ سنوات تقريبًا، وفيها يتسم تفكير الطفل بالتمركز حول الذات."],
+["تربوي","صاحب فكرة «المنهج الحلزوني» الذي تتكرر فيه المفاهيم بمستويات أعمق عبر الصفوف:","جيروم برونر","إيفان بافلوف","إدوارد ثورندايك","ب. ف. سكنر","يعود المنهج الحلزوني إلى المفهوم نفسه في كل مرحلة بعمق أكبر."],
+["تربوي","من أبرز الأسماء المرتبطة بالتعلم بالاكتشاف:","جيروم برونر","إيفان بافلوف","إدوارد ثورندايك","ب. ف. سكنر","يرى برونر أن المتعلم يبني المعرفة بنفسه عبر الاستكشاف."],
+["تربوي","عندما يعدل الطفل تصوره السابق بعد أن عرف أن بعض الطيور لا تطير، فهو يستخدم عملية:","المواءمة","الاستيعاب","الشرطية","التكرار","المواءمة تعديل البنية المعرفية لتناسب خبرة جديدة، والاستيعاب إدخال الخبرة في البنية الحالية."],
+["تربوي","القصد بالاتزان المعرفي عند بياجيه:","التوازن بين الاستيعاب والمواءمة","الحصول على درجات متساوية","التوقف عن التعلم","التوازن بين الحفظ والفهم","هو دافع النمو المعرفي عند بياجيه."],
+["تربوي","«المنطقة القريبة للنمو» مفهوم ارتبط بالعالم:","ليف فيجوتسكي","جان بياجيه","أبراهام ماسلو","ألبرت باندورا","هي الفجوة بين ما يؤديه المتعلم وحده وما يؤديه بمساعدة الآخرين."],
+["تربوي","تكرار الطالب للسلوك المرغوب بعد تلقيه مكافأة يفسر على أنه:","التعزيز الإيجابي (سكنر)","الاشتراط الكلاسيكي","التعلم بالملاحظة","التعلم بالاكتشاف","نتيجة سارة تعقب السلوك تزيد احتمال تكراره."],
+["تربوي","تجربة الكلب وسيلان اللعاب عند سماع الجرس ترتبط بنظرية:","الاشتراط الكلاسيكي (بافلوف)","الاشتراط الإجرائي","النظرية البنائية","التعلم الاجتماعي","ربط مثير محايد (الجرس) بمثير طبيعي (الطعام)."],
+["تربوي","تعلم الطفل سلوكًا بملاحظة نموذج وتقليده يوضح نظرية:","باندورا (التعلم الاجتماعي)","بافلوف","ثورندايك","سكنر","التعلم بالنمذجة والملاحظة."],
+["تربوي","في هرم ماسلو، الحاجات التي تتحقق أولًا هي:","الفسيولوجية","الأمان","الانتماء","تحقيق الذات","الطعام والماء والراحة قاعدة الهرم، ثم الأمان فالانتماء فالتقدير فتحقيق الذات."],
+["تربوي","أعلى مستوى معرفي في تصنيف بلوم الأصلي للأهداف المعرفية هو:","التقويم","التذكر","الفهم","التطبيق","يضم المستويات: معرفة، فهم، تطبيق، تحليل، تركيب، تقويم."],
+["تربوي","الطالب الذي يفهم مشاعر الآخرين ويقدرها يتميز بذكاء:","اجتماعي (بين شخصي)","لغوي","منطقي رياضي","طبيعي","من الذكاءات المتعددة عند جاردنر."],
+["تربوي","تفوق الإناث في الذكاء اللغوي والذكور في المنطقي الرياضي مثال على:","الفروق بين الجنسين","الفروق داخل الفرد","الفروق العمرية","الفروق الثقافية فقط","هي فروق جماعية في المتوسطات، لا تعني أن كل أنثى أو ذكر يتفوق."],
+["تربوي","في العلاقة الإرشادية، يسمى الشخص الذي يطلب المساعدة:","المسترشد","المرشد","الموجه","المقيّم","المرشد هو المتخصص الذي يقدم المساعدة."],
+["تربوي","أي العبارات التالية صحيحة؟","التقويم أعم وأشمل من القياس","القياس أعم من التقويم","القياس والتقويم مصطلحان متطابقان","الاختبار أعم من التقويم","القياس وصف كمي، والتقويم حكم على الدرجة يتضمن القياس."],
+["تربوي","الاختبار في العملية التعليمية هو:","أداة من أدوات القياس","مرادف للتقويم","أعم من التقويم","نوع من أنواع التعزيز","يستخدم لجمع بيانات كمية عن مستوى الطالب."],
+["تربوي","طفل يفكك ألعابه بدافع حب الاستطلاع، فالأنسب مع سلوكه:","توجيهه إلى أنشطة تفكيك وتركيب آمنة","ضربه كي يتوقف","حرمانه من اللعب نهائيًا","تجاهله تمامًا","التوجيه يحول الدافع المفيد إلى نشاط تعليمي."],
+["تربوي","إلغاء المعلم واجبًا مزعجًا بعد تحسن سلوك الطالب يعد:","تعزيزًا سلبيًا","عقابًا","تعزيزًا إيجابيًا","إطفاءً","التعزيز السلبي إزالة مثير منفر بعد سلوك مرغوب لزيادة تكراره."],
+["تربوي","أفضل أسلوب لضبط الفصل هو:","الوقاية بقواعد واضحة متفق عليها","رفع الصوت دائمًا","العقاب الجماعي","تجاهل الفوضى","الضبط الوقائي يمنع المشكلات قبل حدوثها."],
+["تربوي","الدافعية الداخلية تتجلى عندما:","يتعلم الطالب لأنه يستمتع بالمعرفة","يتعلم لينال هدية","يتعلم خوفًا من العقاب","يتعلم لأن زميله يتعلم","مصدرها حب الاستطلاع والرغبة الذاتية."],
+["تربوي","أهم ركائز التعلم التعاوني:","الاعتماد المتبادل الإيجابي والمسؤولية الفردية","المنافسة بين الأفراد","عمل أقوى طالب وحده","الحفظ الجماعي","المجموعة تنجح حين ينجح كل عضو."],
+["تربوي","أفضل أنواع التغذية الراجعة:","فورية ومحددة وبنّاءة","عامة ومتأخرة","سلبية دائمًا","مدحًا مطلقًا بلا تفصيل","تحدد للطالب ما أصاب فيه وما يحسنه."],
+["تربوي","عند مراعاة المعلم للفروق الفردية يلجأ إلى:","تنويع الأنشطة والأساليب","معاملة الجميع بالطريقة نفسها","تجاهل الضعفاء","تركيز الشرح للمتفوقين فقط","الفروق الفردية تتطلب تنويعًا في الوسائل والمستويات."],
+["تربوي","في العصف الذهني تمنع ... أثناء توليد الأفكار:","نقد الأفكار وتقويمها","كتابة الأفكار","تعدد المشاركين","التشجيع","الهدف كم كبير من الأفكار، ثم التقويم لاحقًا."],
+["تربوي","التعلم ذو المعنى يحدث عندما:","ترتبط المعلومة الجديدة ببنية الطالب المعرفية","يحفظ الطالب النص حرفيًا","يكرر المعلومة مرات كثيرة","يخاف من الامتحان","في مقابل الحفظ الآلي الذي لا يرتبط بالمعرفة السابقة."]
+);
+
+window.QS=window.QS||[];window.QS.push(
+["معلومات عامة","بدأت حرب أكتوبر المجيدة في:","٦ أكتوبر ١٩٧٣","٦ يونيو ١٩٦٧","٢٣ يوليو ١٩٥٢","٢٥ أبريل ١٩٨٢","بدأت في العاشر من رمضان، وكانت العبور العظيم لقناة السويس."],
+["معلومات عامة","أول رئيس لجمهورية مصر العربية بعد إعلان الجمهورية:","محمد نجيب","جمال عبد الناصر","أنور السادات","محمد حسني مبارك","أُعلنت الجمهورية عام ١٩٥٣."],
+["معلومات عامة","افتُتحت قناة السويس للملاحة العالمية عام:","١٨٦٩","١٨٥٩","١٩٥٦","١٩٧٥","بدأ الحفر عام ١٨٥٩، وأُممت عام ١٩٥٦."],
+["معلومات عامة","تربط قناة السويس بين:","البحر المتوسط والبحر الأحمر","البحر الأحمر والمحيط الهندي مباشرة","المتوسط والأطلنطي","النيل والبحر الأحمر","اختصرت الطريق بين أوروبا وآسيا."],
+["معلومات عامة","تقع منطقة أبو صوير في محافظة:","الإسماعيلية","السويس","الشرقية","بورسعيد","من مراكز محافظة الإسماعيلية."],
+["معلومات عامة","تقع مدينة الجلالة على ساحل خليج السويس بمحافظة:","السويس","الإسماعيلية","مطروح","البحر الأحمر","تطل على خليج السويس بالقرب من العين السخنة."],
+["معلومات عامة","أعلى قمة جبلية في مصر:","جبل كاترين","جبل موسى","جبل سانت كاترين الأحمر","جبل عتاقة","يبلغ ارتفاعه نحو ٢٦٢٩ مترًا في جنوب سيناء."],
+["معلومات عامة","أكبر محافظات مصر من حيث المساحة:","الوادي الجديد","مطروح","أسوان","البحر الأحمر","تبلغ مساحتها نحو ثلث مساحة مصر تقريبًا."],
+["معلومات عامة","من أهداف بناء السد العالي:","تنظيم الري وتوليد الكهرباء","تحلية مياه البحر","إنتاج البترول","تسهيل الملاحة في المتوسط","يحجز المياه في بحيرة ناصر ويحمي من الفيضانات والجفاف."],
+["معلومات عامة","يقع المقر الرئيسي لجامعة الدول العربية في:","القاهرة","الرياض","تونس","بغداد","أُنشئت عام ١٩٤٥ ومقرها القاهرة."],
+["معلومات عامة","أول أديب عربي فاز بجائزة نوبل في الأدب:","نجيب محفوظ","طه حسين","توفيق الحكيم","عباس العقاد","فاز بها عام ١٩٨٨."],
+["معلومات عامة","فاز أحمد زويل بجائزة نوبل في:","الكيمياء","الطب","الفيزياء","السلام","نالها عام ١٩٩٩ عن كيمياء الفيمتو ثانية."],
+["معلومات عامة","الناتج المحلي الإجمالي هو:","القيمة السوقية للسلع والخدمات النهائية المنتجة داخل الدولة خلال فترة زمنية","الارتفاع المستمر في الأسعار","عدد السكان القادرين على العمل","قيمة الصادرات فقط","يقيس حجم النشاط الاقتصادي داخل حدود الدولة."],
+["معلومات عامة","الارتفاع المستمر في المستوى العام للأسعار يسمى:","التضخم","الركود","الانكماش","العجز","عكسه الانكماش."],
+["معلومات عامة","أي أشكال التكتل الاقتصادي يوحد التعرفة الجمركية تجاه الدول غير الأعضاء؟","الاتحاد الجمركي","منطقة التجارة الحرة","الاتفاقية التجارية التفضيلية","الحظر التجاري","في منطقة التجارة الحرة تحتفظ كل دولة بتعرفتها تجاه الخارج."],
+["معلومات عامة","تستهدف مبادرة «حياة كريمة»:","تطوير الريف وتحسين جودة حياة سكانه","تطوير الموانئ البحرية","إنتاج السيارات","تطوير المطارات الدولية","تشمل مياه الشرب والصرف والصحة والتعليم."],
+["معلومات عامة","هدفت مبادرة «١٠٠ مليون صحة» إلى:","الكشف المبكر وعلاج فيروس سي والأمراض غير السارية","محو الأمية","دعم الصادرات","تطوير الطرق","بدأت عام ٢٠١٨ وشملت ملايين المواطنين."],
+["معلومات عامة","تقع العاصمة الإدارية الجديدة:","شرق القاهرة","غرب الجيزة","جنوب أسوان","شمال الإسكندرية","على طريق القاهرة السويس."],
+["معلومات عامة","تقع محطة الضبعة النووية بمحافظة:","مطروح","أسوان","السويس","شمال سيناء","على ساحل البحر المتوسط، بالتعاون مع روسيا."],
+["معلومات عامة","حضور رئيسي دولتين لمراسم مشروع مشترك كبير يدل على:","توثيق التعاون بين الدولتين","الاستعداد للحرب","انتهاء العلاقات","إلغاء المشروع","المشروعات الكبرى المشتركة تعكس شراكة سياسية واقتصادية."],
+["معلومات عامة","الموقف السليم عند مواجهة عادات ثقافة أخرى مختلفة:","الاحترام مع التمسك بقيمنا","الازدراء","الانصهار الكامل فيها","الصدام معها","التعايش يقوم على احترام الاختلاف دون ذوبان الهوية."],
+["معلومات عامة","عاصمة المملكة المغربية:","الرباط","الدار البيضاء","مراكش","فاس","الدار البيضاء أكبر مدنها وليست عاصمتها."],
+["معلومات عامة","أكبر كواكب المجموعة الشمسية:","المشتري","زحل","الأرض","نبتون","المشتري عملاق غازي."],
+["معلومات عامة","أقرب الكواكب إلى الشمس:","عطارد","الزهرة","المريخ","الأرض","عطارد هو الأصغر أيضًا."],
+["معلومات عامة","أكبر قارات العالم مساحة:","آسيا","أفريقيا","أمريكا الشمالية","أوروبا","تشغل نحو ثلث مساحة اليابسة."],
+["معلومات عامة","أكثر الغازات وجودًا في الغلاف الجوي للأرض:","النيتروجين","الأكسجين","ثاني أكسيد الكربون","الهيدروجين","يشكل نحو ٧٨٪."],
+["معلومات عامة","وحدة قياس القوة في النظام الدولي:","نيوتن","جول","واط","باسكال","الجول للطاقة، والواط للقدرة."],
+["معلومات عامة","يقع المقر الرئيسي لمنظمة الصحة العالمية في:","جنيف","نيويورك","باريس","لندن","هي وكالة متخصصة تابعة للأمم المتحدة."],
+["معلومات عامة","شيّد الهرم الأكبر بالجيزة الملك:","خوفو","خفرع","منقرع","رمسيس الثاني","من ملوك الأسرة الرابعة."]
+,["معلومات عامة","أكبر صحراء حارة في العالم:","الصحراء الكبرى","صحراء كالاهاري","الربع الخالي","صحراء جوبي","تمتد عبر شمال أفريقيا ومنها جزء كبير في مصر."]
+);
+
+window.QS=window.QS||[];window.QS.push(
+["حاسب آلي","تعتبر وحدة المعالجة المركزية (CPU):","عقل الحاسب الذي ينفذ التعليمات","وحدة تخزين دائمة","وحدة إخراج","وحدة إدخال","تنفذ العمليات الحسابية والمنطقية وتتحكم في باقي المكونات."],
+["حاسب آلي","الذاكرة العشوائية (RAM) تتميز بأنها:","مؤقتة وتفقد محتوياتها بانقطاع الكهرباء","تحتفظ بالبيانات دائمًا","للقراءة فقط","وحدة إخراج","تحمل البرامج والبيانات التي يعمل عليها المعالج حاليًا."],
+["حاسب آلي","الذاكرة ROM تتميز بأنها:","للقراءة فقط وتحتفظ بمحتوياتها","تفقد بياناتها عند الإغلاق","لتخزين ملفات المستخدم","أسرع من المعالج","تحتوي تعليمات بدء تشغيل الجهاز."],
+["حاسب آلي","أي الأجهزة التالية ليست وحدة إدخال؟","الطابعة","لوحة المفاتيح","الماسح الضوئي","الميكروفون","الطابعة وحدة إخراج."],
+["حاسب آلي","أي الأجهزة التالية وحدة إخراج؟","الشاشة","الفأرة","الماسح الضوئي","الكاميرا","تعرض الشاشة نتائج المعالجة."],
+["حاسب آلي","يتكون البايت (Byte) من:","٨ بت","٤ بت","١٦ بت","١٠٢٤ بت","البت أصغر وحدة تخزين، وهو رقم ثنائي."],
+["حاسب آلي","الكيلوبايت (KB) يساوي:","١٠٢٤ بايت","١٠٠٠ بت","٨ بايت","١٠٢٤ ميجابايت","الميجابايت يساوي ١٠٢٤ كيلوبايت."],
+["حاسب آلي","تقاس سرعة المعالج غالبًا بوحدة:","الجيجاهيرتز (GHz)","الجيجابايت","الدرجة","البكسل","تعبر عن عدد الدورات في الثانية."],
+["حاسب آلي","أي مما يلي نظام تشغيل؟","Windows","Microsoft Word","Google Chrome","Excel","نظام التشغيل يدير مكونات الجهاز والبرامج."],
+["حاسب آلي","برنامج معالجة النصوص من حزمة أوفيس:","Word","Excel","PowerPoint","Access","يستخدم لكتابة المستندات وتنسيقها."],
+["حاسب آلي","برنامج الجداول الحسابية من حزمة أوفيس:","Excel","Word","PowerPoint","Outlook","يستخدم للحسابات والرسوم البيانية."],
+["حاسب آلي","برنامج العروض التقديمية:","PowerPoint","Word","Excel","Paint","يُنشئ الشرائح للعرض."],
+["حاسب آلي","في رسالة البريد الإلكتروني، الحقل الذي يرسل نسخة دون أن يظهر المستلم للآخرين هو:","Bcc","To","Cc","Subject","Bcc نسخة مخفية، وCc نسخة ظاهرة."],
+["حاسب آلي","الحقل الذي يحمل عنوان الرسالة في البريد الإلكتروني:","Subject","Attachment","Body","From","Subject هو موضوع الرسالة."],
+["حاسب آلي","الملف المرفق مع رسالة البريد الإلكتروني يسمى:","Attachment","Subject","Draft","Spam","يظهر عادة برمز مشبك."],
+["حاسب آلي","الشرطة الوامضة التي تظهر عند الكتابة في المستند تسمى:","المؤشر (Cursor)","الأيقونة","شريط المهام","سطح المكتب","تحدد موضع ظهور الحرف التالي."],
+["حاسب آلي","اختصار «تراجع» عن آخر إجراء في معظم البرامج:","Ctrl + Z","Ctrl + C","Ctrl + V","Ctrl + X","Ctrl + Y يعيد الإجراء الذي تراجعت عنه."],
+["حاسب آلي","اختصار النسخ:","Ctrl + C","Ctrl + X","Ctrl + V","Ctrl + S","X للقص وV للصق وS للحفظ."],
+["حاسب آلي","تبدأ الصيغة في برنامج Excel بالعلامة:","=","#","@","$","مثل: =A1+B1."],
+["حاسب آلي","الدالة التي تجمع نطاقًا من الخلايا في Excel:","SUM","AVERAGE","COUNT","MAX","AVERAGE للمتوسط وCOUNT للعد وMAX لأكبر قيمة."],
+["حاسب آلي","الدالة التي تحسب المتوسط الحسابي في Excel:","AVERAGE","SUM","MIN","COUNT","المتوسط مجموع القيم مقسومًا على عددها."],
+["حاسب آلي","عنوان الخلية في Excel يتكون من:","حرف العمود ثم رقم الصف مثل B3","رقم الصف ثم اسم الورقة","اسم الملف","رقمين فقط","الخلية B3 تقع في العمود B والصف ٣."],
+["حاسب آلي","الفيروس في الحاسب هو:","برنامج ضار ينتشر ويضر بالملفات","جهاز إخراج","وحدة تخزين","لوحة مفاتيح","يُحمى الجهاز منه ببرنامج مضاد للفيروسات محدّث."],
+["حاسب آلي","كلمة المرور الأقوى:","خليط من أحرف وأرقام ورموز وطول كافٍ","اسم المستخدم نفسه","تاريخ الميلاد","12345","كلما زاد طولها وتنوعت رموزها صعب تخمينها."],
+["حاسب آلي","الرسالة التي تدعي أنها من جهة موثوقة لسرقة بياناتك تسمى:","التصيّد الإلكتروني (Phishing)","النسخ الاحتياطي","الضغط","التحديث","لا تضغط على روابطها ولا تدخل بياناتك."],
+["حاسب آلي","أي مما يلي محرك بحث؟","Google","Chrome","Windows","Word","Chrome متصفح، أما Google فمحرك بحث."],
+["حاسب آلي","أي مما يلي متصفح إنترنت؟","Google Chrome","Google Search","Gmail","Excel","المتصفح برنامج لفتح مواقع الإنترنت."],
+["حاسب آلي","الاختصار URL يدل على:","عنوان صفحة الإنترنت","نوع الحاسب","اسم المستخدم","سرعة المعالج","مثل: https://example.com."],
+["حاسب آلي","الشبكة المحلية (LAN) هي شبكة:","تربط أجهزة في نطاق محدود كمدرسة أو مبنى","تغطي دولًا","تغطي العالم","لا تحتاج إلى أجهزة","WAN شبكة واسعة تغطي مساحات كبيرة."],
+["حاسب آلي","النظام الثنائي يعتمد على الرقمين:","٠ و١","١ و٢","٠ و٩","٢ و٣","هو لغة الحاسب لتمثيل البيانات."]
+);
+
+window.QS=window.QS||[];window.QS.push(
+["لغة عربية","«إنَّ العلمَ نورٌ» — «نورٌ»:","خبر «إن» مرفوع","اسم «إن» منصوب","مبتدأ مرفوع","فاعل مرفوع","«إن» تنصب المبتدأ اسمًا لها وترفع الخبر."],
+["لغة عربية","«كانَ الجوُّ جميلًا» — «جميلًا»:","خبر «كان» منصوب","اسم «كان» مرفوع","حال منصوبة","مفعول به","«كان» ترفع المبتدأ اسمًا لها وتنصب الخبر."],
+["لغة عربية","«جاءَ المعلمونَ» — علامة رفع «المعلمون»:","الواو لأنه جمع مذكر سالم","الضمة الظاهرة","الألف لأنه مثنى","ثبوت النون","جمع المذكر السالم يرفع بالواو وينصب ويجر بالياء."],
+["لغة عربية","«رأيتُ المعلمينَ» — علامة نصب «المعلمين»:","الياء لأنه جمع مذكر سالم","الفتحة الظاهرة","الألف","الكسرة","ينصب جمع المذكر السالم بالياء."],
+["لغة عربية","«جاءَ أبو زيدٍ» — علامة رفع «أبو»:","الواو لأنه من الأسماء الخمسة","الضمة الظاهرة","الألف","ثبوت النون","الأسماء الخمسة: أب، أخ، حم، فو، ذو."],
+["لغة عربية","«لم يكتبِ الطالبُ» — علامة جزم «يكتبْ»:","السكون","حذف النون","حذف حرف العلة","الفتحة","الفعل الصحيح الآخر يجزم بالسكون."],
+["لغة عربية","«الطلابُ يكتبونَ» — علامة رفع «يكتبون»:","ثبوت النون","الضمة","الواو","حذف النون","الأفعال الخمسة ترفع بثبوت النون."],
+["لغة عربية","«يُحَبُّ العلمُ» — «العلمُ»:","نائب فاعل","فاعل","مفعول به","مبتدأ","الفعل مبني للمجهول، فاستُبدل بالفاعل نائبه."],
+["لغة عربية","«قرأَ الطالبُ الدرسَ» — «الدرسَ»:","مفعول به منصوب","فاعل مرفوع","مبتدأ مرفوع","حال منصوبة","وقع عليه فعل القراءة."],
+["لغة عربية","«مررتُ بمساجدَ كثيرةٍ» — جُرّ «مساجدَ» بالفتحة لأنه:","ممنوع من الصرف (صيغة منتهى الجموع)","مثنى","جمع مذكر سالم","اسم مقصور","على وزن «مفاعل» فلا ينون ويجر بالفتحة."],
+["لغة عربية","أي الكلمات التالية حرف جر؟","على","كان","إنّ","لم","كان وإن أفعال وحروف ناسخة، ولم حرف جزم."],
+["لغة عربية","من علامات الاسم:","الجر والتنوين","تاء التأنيث الساكنة","السين وسوف","نون التوكيد","تاء التأنيث الساكنة علامة الفعل الماضي."],
+["لغة عربية","الجر يختص بـ:","الأسماء","الأفعال","الحروف","الأفعال والحروف","الأسماء تجر، والأفعال ترفع وتنصب وتجزم."],
+["لغة عربية","أي أفعال الأمر التالية همزتها همزة وصل؟","اكتبْ","أكرمْ","أحسنْ","أنصفْ","أمر الثلاثي همزته وصل، وأمر الرباعي همزته قطع."],
+["لغة عربية","جمع «قلم» جمع تكسير:","أقلام","قلمات","قلامين","قلمون","جمع قلة على وزن «أفعال»."],
+["لغة عربية","مفرد «أصدقاء»:","صديق","صدق","صاحب","صداقة","جمع تكسير على وزن «أفعلاء»."],
+["لغة عربية","ضد كلمة «الشجاعة»:","الجبن","الكرم","الصبر","العلم","الشجاع يقابله الجبان."],
+["لغة عربية","«العلمُ كالنورِ» — أداة التشبيه:","الكاف","العلم","النور","لا أداة","المشبه: العلم، والمشبه به: النور."],
+["لغة عربية","﴿يُحْيِي وَيُمِيتُ﴾ — الطباق هنا بين:","فعلين","اسمين","حرفين","اسم وفعل","يحيي ضد يميت، وكلاهما فعل مضارع."],
+["لغة عربية","السجع هو:","توافق الفاصلتين في الحرف الأخير","تكرار اللفظ نفسه بمعنيين","التضاد بين لفظين","الحذف مع الدلالة","مثل: «من جدّ وجد، ومن زرع حصد»."],
+["لغة عربية","«فلانٌ كثيرُ الرمادِ» كناية عن:","الكرم","الفقر","الحزن","القوة","كثرة الرماد دليل كثرة الطبخ للضيوف."],
+["لغة عربية","«ابتسمتِ الزهورُ» — الصورة البلاغية:","استعارة مكنية","تشبيه تمثيلي","كناية عن صفة","مجاز مرسل","شبهت الزهور بإنسان يبتسم فحُذف المشبه به."],
+["لغة عربية","لُقّب بأمير الشعراء:","أحمد شوقي","حافظ إبراهيم","البارودي","المتنبي","لقب بذلك عام ١٩٢٧."],
+["لغة عربية","لُقّب بشاعر النيل:","حافظ إبراهيم","أحمد شوقي","إيليا أبو ماضي","أبو القاسم الشابي","كتب قصيدة «اللغة العربية تتحدث عن نفسها»."],
+["لغة عربية","أي الشعراء التالية أسماؤهم من المخضرمين؟","لبيد بن ربيعة","طرفة بن العبد","امرؤ القيس","عنترة بن شداد","أدرك الجاهلية والإسلام وأسلم."],
+["لغة عربية","أي الكلمات التالية تُكتب بتاء مفتوحة (ت)؟","بيت","مدرسة","حديقة","معلمة","تاء «بيت» أصلية في الاسم ولا تتحول في الوقف."],
+["لغة عربية","أي الكلمات التالية تُكتب بألف قائمة (ا)؟","رضا","هدى","فتى","مستشفى","«رضا» ثلاثي أصله الواو (رضوان)، والبقية تكتب بالألف المقصورة."],
+["لغة عربية","القوسان ﴿ ﴾ في الكتابة يستخدمان لـ:","الآيات القرآنية","الاقتباس من الشعر","الأمثال فقط","الأرقام","الأقواس المزهرة خاصة بالآيات."],
+["لغة عربية","«حضرَ الطالبانِ» — علامة رفع «الطالبان»:","الألف لأنه مثنى","الواو","الضمة","ثبوت النون","المثنى يرفع بالألف وينصب ويجر بالياء."],
+["لغة عربية","«الطالبُ مجتهدٌ» — نوع الجملة:","اسمية","فعلية","شبه جملة","جملة شرطية","بدأت باسم «الطالب» فهي جملة اسمية: مبتدأ وخبر."]
+);
+
+window.QS=window.QS||[];window.QS.push(
+["لغة إنجليزية","She ___ to school every day.","goes","go","going","gone","المضارع البسيط مع الغائب المفرد (she/he/it) يأخذ s أو es."],
+["لغة إنجليزية","I ___ my homework yet.","haven't done","didn't done","don't did","am not do","كلمة yet مع المضارع التام: have/has + p.p."],
+["لغة إنجليزية","He has ___ here since 2010.","lived","live","living","lives","since مع المضارع التام تحتاج التصريف الثالث (p.p.)."],
+["لغة إنجليزية","They ___ football when it started to rain.","were playing","played","are playing","have played","الماضي المستمر لحدث كان جاريًا عندما قاطعه حدث آخر."],
+["لغة إنجليزية","Tomorrow at 8 p.m., I ___ TV.","will be watching","will watch","am watching","watched","المستقبل المستمر: will be + verb-ing، لحدث جارٍ في وقت محدد."],
+["لغة إنجليزية","If it rains, we ___ at home.","will stay","stayed","would stayed","staying","الشرط من النوع الأول: If + present, will + verb."],
+["لغة إنجليزية","The letter ___ yesterday.","was written","wrote","is written","has wrote","مبني للمجهول في الماضي: was/were + p.p."],
+["لغة إنجليزية","What is the opposite of «big»?","small","tall","huge","wide","big ≠ small."],
+["لغة إنجليزية","What is the opposite of «late»?","early","slow","last","after","late ≠ early."],
+["لغة إنجليزية","What is the opposite of «rich»?","poor","happy","kind","old","rich ≠ poor."],
+["لغة إنجليزية","What is the opposite of «weak»?","strong","small","slow","thin","weak ≠ strong."],
+["لغة إنجليزية","Which animal has a very long neck and lives in Africa?","giraffe","lion","elephant","zebra","الزرافة giraffe."],
+["لغة إنجليزية","A yellow fruit that monkeys like is a ___.","banana","apple","grape","orange","موز."],
+["لغة إنجليزية","The fastest land animal is the ___.","cheetah","lion","horse","elephant","الفهد cheetah."],
+["لغة إنجليزية","The comparative form of «good» is:","better","gooder","best","more good","good → better → best."],
+["لغة إنجليزية","The superlative form of «bad» is:","worst","baddest","worse","most bad","bad → worse → worst."],
+["لغة إنجليزية","I was born ___ 1999.","in","on","at","by","in مع السنوات والشهور، on مع الأيام والتواريخ."],
+["لغة إنجليزية","I waited for ___ hour.","an","a","any","some","كلمة hour تبدأ بحرف h صامت فتنطق بصوت علة، لذلك نستخدم an."],
+["لغة إنجليزية","This book is ___. It belongs to me.","mine","my","me","I","mine ضمير ملكية مستقل."],
+["لغة إنجليزية","Neither of the boys ___ here.","is","are","were","be","Neither تأخذ فعلًا مفردًا في الاستخدام الرسمي."],
+["لغة إنجليزية","He asked me, «Where do you live?» → He asked me where I ___.","lived","live","do live","am living","في الكلام المنقول يرجع الفعل خطوة للماضي."],
+["لغة إنجليزية","You are a teacher, ___?","aren't you","don't you","isn't you","are you","الجملة مثبتة فالتذييل منفي."],
+["لغة إنجليزية","What does the word «library» mean?","مكتبة","مدرسة","مستشفى","ملعب","library = مكتبة."],
+["لغة إنجليزية","Translate: «أنا أحب القراءة».","I love reading.","I loves reading.","I am love read.","Me love reading.","love + verb-ing للتعبير عن الهواية."],
+["لغة إنجليزية","You ___ smoke here. It is forbidden.","mustn't","don't have to","needn't","might","mustn't للمنع."],
+["لغة إنجليزية","Which spelling is correct?","receive","recieve","receeve","riceive","القاعدة: i before e except after c."],
+["لغة إنجليزية","The past simple of «go» is:","went","goed","gone","going","go → went → gone."],
+["لغة إنجليزية","She ___ a new car.","has","have","having","haves","has مع he/she/it، وhave مع I/you/we/they."],
+["لغة إنجليزية","My brother ___ playing in the garden now.","is","are","am","be","المضارع المستمر مع المفرد الغائب: is + verb-ing."],
+["لغة إنجليزية","The plural of «tooth» is:","teeth","tooths","toothes","teeths","من الجموع الشاذة: foot → feet, tooth → teeth."]
+);
+</script>
+<script>
+(function(){
+  // رقم واتساب بالصيغة الدولية بدون + أو أصفار، مثال: "201012345678". اتركه فارغًا ليفتح واتساب لاختيار جهة.
+  var WA_NUMBER = "201505191893";
+  var WA_TEXT = "السلام عليكم، أريد الاستفسار عن ببساطة (مسابقة معلم مساعد)";
+
+  document.documentElement.setAttribute("dir","rtl");
+  document.documentElement.setAttribute("lang","ar");
+
+  var $ = function(id){return document.getElementById(id)};
+  var nf = new Intl.NumberFormat("ar-EG");
+  var N = function(n){return nf.format(n)};
+  var LET = ["أ","ب","ج","د"];
+  var CATS = ["تربوي","معلومات عامة","حاسب آلي","لغة عربية","لغة إنجليزية"];
+  var ALL = (window.QS||[]).map(function(r,i){return {id:i,c:r[0],q:r[1],ok:r[2],w:[r[3],r[4],r[5]],e:r[6]}});
+
+  function waLink(text){
+    var base = WA_NUMBER ? "https://wa.me/"+WA_NUMBER : "https://wa.me/";
+    return base+"?text="+encodeURIComponent(text);
+  }
+  ["waTop","waFab"].forEach(function(id){$(id).href = waLink(WA_TEXT)});
+
+  var theme="light";try{theme=localStorage.getItem("muaid-theme")||"light"}catch(e){}
+  function applyTheme(){document.documentElement.setAttribute("data-theme",theme)}
+  applyTheme();
+  $("themeBtn").onclick=function(){theme=theme==="dark"?"light":"dark";applyTheme();try{localStorage.setItem("muaid-theme",theme)}catch(e){}};
+
+  var PW_HASH=btoa("1999"),TRIAL=30,locked=false,tm=null,left=TRIAL,KEY="muaid-unlocked",unlocked=false;
+  try{unlocked=localStorage.getItem(KEY)===PW_HASH}catch(e){}
+  $("waLock").href=waLink("السلام عليكم، أريد كلمة السر لاستخدام ببساطة");
+  function tick(){$("trial").textContent="تجربة مجانية: "+N(left)+" ث"}
+  function lockNow(){locked=true;$("lock").hidden=false;setTimeout(function(){$("pw").focus()},50)}
+  if(unlocked){$("trial").hidden=true}else{tick();tm=setInterval(function(){left--;if(left<=0){clearInterval(tm);$("trial").hidden=true;lockNow()}else tick()},1000)}
+  $("pwBtn").addEventListener("click",function(e){e.preventDefault();$("lockForm").onsubmit(e)});
+  $("lockForm").onsubmit=function(e){e.preventDefault();
+    var v=$("pw").value.replace(/[٠-٩]/g,function(d){return String(d.charCodeAt(0)-1632)}).replace(/[۰-۹]/g,function(d){return String(d.charCodeAt(0)-1776)}).replace(/[^0-9]/g,"");
+    if(v==="1999"){locked=false;unlocked=true;clearInterval(tm);$("lock").hidden=true;$("trial").hidden=true;$("pwErr").textContent="";$("pw").value="";try{localStorage.setItem(KEY,PW_HASH)}catch(x){}}
+    else{$("pwErr").textContent="كلمة السر غير صحيحة";$("pw").select()}};
+
+  var cfg = {cat:"الكل", count:20, mode:"practice"};
+  try{ var s = JSON.parse(localStorage.getItem("muaid-cfg")||"null"); if(s){cfg.cat=s.cat||cfg.cat; cfg.count=s.count||cfg.count; cfg.mode=s.mode||cfg.mode;} }catch(e){}
+  function save(){ try{localStorage.setItem("muaid-cfg",JSON.stringify(cfg))}catch(e){} }
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+
+  function poolFor(cat){return cat==="الكل"?ALL:ALL.filter(function(q){return q.c===cat})}
+
+  /* setup UI */
+  $("fTotal").textContent = N(ALL.length);
+  $("fCats").textContent = N(CATS.length);
+  function buildChips(){
+    var cc = $("catChips"); cc.textContent="";
+    ["الكل"].concat(CATS).forEach(function(c){
+      var b = el("button","chip"); b.type="button";
+      b.appendChild(document.createTextNode(c));
+      b.appendChild(el("small","num",N(poolFor(c).length)));
+      b.setAttribute("aria-pressed", String(cfg.cat===c));
+      b.onclick=function(){cfg.cat=c;save();buildChips()};
+      cc.appendChild(b);
+    });
+    var max = poolFor(cfg.cat).length;
+    var opts = [10,20,50,100].filter(function(n){return n<max}).concat([max]);
+    if(opts.indexOf(cfg.count)<0) cfg.count = opts.indexOf(20)>=0?20:opts[opts.length-1];
+    var nc = $("countChips"); nc.textContent="";
+    opts.forEach(function(n){
+      var b = el("button","chip num", n===max?"الكل ("+N(n)+")":N(n)); b.type="button";
+      b.setAttribute("aria-pressed", String(cfg.count===n));
+      b.onclick=function(){cfg.count=n;save();buildChips()};
+      nc.appendChild(b);
+    });
+    Array.prototype.forEach.call($("modes").children,function(m){m.setAttribute("aria-pressed",String(m.dataset.m===cfg.mode))});
+  }
+  Array.prototype.forEach.call($("modes").children,function(m){m.onclick=function(){cfg.mode=m.dataset.m;save();buildChips()}});
+  buildChips();
+
+  /* quiz state */
+  var run = null;
+  function show(id){["home","quiz","result"].forEach(function(s){$(s).hidden = s!==id}); window.scrollTo(0,0)}
+
+  function begin(list){
+    run = {mode:cfg.mode, items:list.map(function(q){
+      var o = shuffle([{t:q.ok,ok:true}].concat(q.w.map(function(t){return {t:t,ok:false}})));
+      return {q:q,opts:o,pick:-1};
+    }), i:0};
+    show("quiz"); render();
+  }
+  $("startBtn").onclick=function(){
+    var list = shuffle(poolFor(cfg.cat)).slice(0,cfg.count);
+    begin(list);
+  };
+
+  function fmt(node,text){
+    text.split(/(﴿[^﴾]*﴾|«[^»]{18,}»)/).forEach(function(p){
+      if(!p) return;
+      if(p.charAt(0)==="﴿") node.appendChild(el("span","ayah",p));
+      else if(p.charAt(0)==="«" && p.length>20) node.appendChild(el("span","vs",p));
+      else node.appendChild(document.createTextNode(p));
+    });
+  }
+
+  function render(){
+    var it = run.items[run.i], total = run.items.length;
+    $("qCount").textContent = "السؤال "+N(run.i+1)+" ";
+    var sp = el("span","num","من "+N(total)); $("qCount").appendChild(sp);
+    $("prog").style.width = (run.i/total*100)+"%";
+    $("qTag").textContent = it.q.c;
+    var qt = $("qText"); qt.setAttribute("dir","auto"); qt.textContent=""; fmt(qt,it.q.q);
+    var box = $("opts"); box.textContent="";
+    it.opts.forEach(function(o,k){
+      var b = el("button","opt"); b.type="button";
+      b.appendChild(el("span","l",LET[k]));
+      var tt=el("span","t",o.t);tt.setAttribute("dir","auto");b.appendChild(tt);
+      b.onclick=function(){choose(k)};
+      box.appendChild(b);
+    });
+    $("why").hidden = true;
+    $("nextBtn").disabled = true;
+    $("nextBtn").textContent = run.i===total-1 ? "عرض النتيجة" : "التالي";
+    $("hint").textContent = run.mode==="practice" ? "اضغط على رقم الخيار أو اختره بالنقر" : "يمكنك تغيير اختيارك قبل الضغط على التالي";
+    if(it.pick>=0) paint(it);
+  }
+
+  function paint(it){
+    var kids = $("opts").children;
+    for(var k=0;k<kids.length;k++){
+      var c = "opt";
+      if(run.mode==="practice"){
+        kids[k].disabled = true;
+        if(it.opts[k].ok) c += " ok"; else if(k===it.pick) c += " no";
+      } else if(k===it.pick) c += " sel";
+      kids[k].className = c;
+    }
+    $("nextBtn").disabled = false;
+    if(run.mode==="practice"){
+      $("whyT").textContent = (it.opts[it.pick].ok ? "إجابة صحيحة. " : "الإجابة الصحيحة: «\u2068"+it.q.ok+"\u2069». ") + it.q.e;
+      $("why").hidden = false;
+    }
+  }
+  function choose(k){
+    var it = run.items[run.i];
+    if(run.mode==="practice" && it.pick>=0) return;
+    it.pick = k; paint(it);
+  }
+  $("nextBtn").onclick=function(){
+    if(run.items[run.i].pick<0) return;
+    if(run.i<run.items.length-1){run.i++;render();window.scrollTo(0,0)} else finish();
+  };
+  $("quitBtn").onclick=function(){
+    var answered = run.items.filter(function(x){return x.pick>=0});
+    if(answered.length===0){show("home");return}
+    run.items = answered; finish();
+  };
+  document.addEventListener("keydown",function(e){
+    if(locked||$("quiz").hidden) return;
+    var n = parseInt(e.key,10);
+    if(n>=1&&n<=4){choose(n-1)}
+    else if(e.key==="Enter" && !$("nextBtn").disabled && document.activeElement.tagName!=="BUTTON"){$("nextBtn").click()}
+  });
+
+  /* results */
+  function finish(){
+    var items = run.items, total = items.length;
+    var right = items.filter(function(x){return x.opts[x.pick].ok}).length;
+    var pct = Math.round(right/total*100);
+    show("result");
+    $("pct").textContent = N(pct)+"٪";
+    var C = 2*Math.PI*52, fg = $("ringFg");
+    fg.style.strokeDasharray = C; fg.style.strokeDashoffset = C;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){fg.style.strokeDashoffset = C*(1-pct/100)})});
+    $("rTitle").textContent = pct>=85?"مستوى ممتاز":pct>=65?"مستوى جيد، راجع الأخطاء":pct>=40?"تحتاج إلى مزيد من المراجعة":"ابدأ بمراجعة القواعد ثم أعد المحاولة";
+    $("rSub").textContent = "أجبت إجابة صحيحة عن "+N(right)+" من "+N(total)+" سؤالًا";
+    var by = {}; items.forEach(function(x){var c=x.q.c;by[c]=by[c]||{r:0,t:0};by[c].t++;if(x.opts[x.pick].ok)by[c].r++});
+    var cats = $("cats"); cats.textContent="";
+    CATS.filter(function(c){return by[c]}).forEach(function(c){
+      var p = Math.round(by[c].r/by[c].t*100);
+      var row = el("div","cat"); row.appendChild(el("span",null,c));
+      var bar = el("div","bar2"), i = el("i", p<50?"low":""); i.style.width=p+"%"; bar.appendChild(i); row.appendChild(bar);
+      row.appendChild(el("span","num",N(by[c].r)+" / "+N(by[c].t)));
+      cats.appendChild(row);
+    });
+    var wrong = items.filter(function(x){return !x.opts[x.pick].ok});
+    $("wrongBtn").hidden = wrong.length===0;
+    $("wrongBtn").onclick=function(){begin(shuffle(wrong.map(function(x){return x.q})))};
+    $("shareBtn").href = waLink("حللت اختبار ببساطة لمسابقة معلم مساعد وحصلت على "+right+" من "+total+" ("+pct+"٪). جرّبه أنت أيضًا!");
+    var rev = $("rev"); rev.textContent="";
+    if(wrong.length){
+      rev.appendChild(el("h3",null,"مراجعة الأخطاء ("+N(wrong.length)+")"));
+      wrong.forEach(function(x){
+        var d = el("details","ri"), s = el("summary"); var span = el("span"); fmt(span,x.q.q); s.appendChild(span); d.appendChild(s);
+        var b = el("div","b");
+        var sn=el("span","n","اختيارك: "+x.opts[x.pick].t);sn.setAttribute("dir","auto");b.appendChild(sn);
+        var sy=el("span","y","الصحيح: "+x.q.ok);sy.setAttribute("dir","auto");b.appendChild(sy);
+        b.appendChild(el("span",null,x.q.e));
+        d.appendChild(b); rev.appendChild(d);
+      });
+    }
+  }
+  $("againBtn").onclick=function(){show("home")};
+  document.querySelector(".logo").onclick=function(e){e.preventDefault();if(!$("quiz").hidden && !confirmLeave()) return; show("home")};
+  function confirmLeave(){return true}
+})();
+</script>
+</body>
+</html>
